@@ -1,0 +1,19 @@
+Why to do that?
+-Python bindings available, but not C++
+-rapid & high-level development on Python without data type checking, usage through C++
+
+Assumptions
+-if args, handle only int args
+-multithreading not taken into account (yet)
+
+How?
+-code & comments on
+-loadModule
+--avoid duplicate module load
+--globals
+
+-callFunctionObject
+
+Tested on Linux
+C++11
+
