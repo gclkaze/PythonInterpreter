@@ -5,6 +5,7 @@
 void add_cwd_in_python_path();
 int initial(int argc, char** argv);
 bool callPythonInterpreter(int argc, char** argv);
+bool callPythonInterpreterMultipleThreads(void);
 
 int main(int argc, char *argv[])
 {
@@ -15,10 +16,39 @@ int main(int argc, char *argv[])
 		return 1;
 	}
     //initial(argc, argv);
-    int i = 0;
+    /*int i = 0;
     while(i++ < 30)
-    callPythonInterpreter(argc, argv);
+    callPythonInterpreter(argc, argv);*/
 
+    callPythonInterpreterMultipleThreads();
+
+}
+
+bool callPythonInterpreterMultipleThreads(void)
+{
+	auto py = new Interpret::PythonIntepreter();
+    auto res = py->loadModule("spam");
+    
+    std::vector<std::pair<std::string,std::vector<std::string>>>activationRecords;
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+activationRecords.push_back(std::make_pair<std::string,std::vector<std::string>>("foo",{}));
+    res = py->callFunctions(activationRecords);
+    assert (res == 0);
+    delete py;
+    return true;
 }
 
 bool callPythonInterpreter(int argc, char** argv)

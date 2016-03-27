@@ -4,6 +4,8 @@
 #include <functional>
 #include <map>
 #include "AtomicResultList.h"
+#include <thread>
+#include <mutex>
 
 namespace Interpret{
     enum InterpreterStatus{
@@ -34,6 +36,10 @@ namespace Interpret{
         std::map<ReturnValue::ReturnValueType,std::function<bool(PyObject*)>> m_DataTypeCheckers;
         ReturnValue *m_Value = nullptr;
 
+        std::mutex m_FunctionBatchMutex;  // protects callFunctions
+        std::mutex m_ModuleTableMutex;  // protects m_CurrentTable
+        AtomicResultList *m_Results = nullptr;
+
     public:
 
         PythonIntepreter()
@@ -43,6 +49,9 @@ namespace Interpret{
 
         ~PythonIntepreter()
         {
+
+            delete m_Results;
+
         	cleanUp();
 
         	// Finish the Python Interpreter
@@ -168,7 +177,7 @@ namespace Interpret{
                 }
 
     		    if (pValue != nullptr)  {
-    		    	handleReturnValue(*pValue);
+    		    	//handleReturnValue(*pValue);
     			    printf("Return of call : %d\n", (int)PyInt_AsLong(pValue));
     			    //Py_DECREF(pValue);
     		    }
@@ -185,9 +194,43 @@ namespace Interpret{
             return OK;
         }
 
-        InterpreterStatus callFunctions(const std::map<std::string,std::vector<std::string>> &activationRecords)
+        InterpreterStatus callFunctions(const std::vector<std::pair<std::string,std::vector<std::string>>> &activationRecords)
         {
-            return NOT_CALLABLE_OBJECT;
+            std::lock_guard<std::mutex> lock(m_FunctionBatchMutex);
+            std::vector<std::thread> threads;
+
+            if(m_Results) delete m_Results;
+            m_Results = new AtomicResultList();
+
+            PyEval_InitThreads();
+            
+            for(auto & rec : activationRecords) {
+                auto lambda = [&](){
+                     std::lock_guard<std::mutex> another(m_ModuleTableMutex);
+
+                       PyObject* res = PyObject_CallObject(PyDict_GetItemString(m_CurrentTable, rec.first.c_str()), nullptr);
+                       auto ob = std::make_pair<int, ReturnValue*>(0,new ReturnValue(res,Interpret::ReturnValue::ReturnValueType::NULL_OBJECT) );
+                       //std::cout << "the object" << res << std::endl;
+                       m_Results->push(ob);
+
+                };
+                threads.push_back(std::thread(lambda));
+            }
+
+
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
+            for(auto &t : threads) {
+                t.join();
+            }
+            PyGILState_Release(gstate);
+            //m_Results->dump();
+
+
+
+// release the lock
+PyEval_ReleaseLock();
+            return OK;
         }
 
         InterpreterStatus callFunction(const std::string& function)

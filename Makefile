@@ -1,5 +1,5 @@
 all:
-	g++ -std=c++11 -Wall -o call  -g -I/usr/include/python2.7 main.cpp PythonInterpreter.h AtomicResultList.h -lpython2.7 
+	g++ -std=c++11 -Wall -o call  -g -I/usr/include/python2.7 main.cpp PythonInterpreter.h AtomicResultList.h -lpython2.7 -pthread
 clean:
 	rm call
 run:

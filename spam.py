@@ -1,6 +1,12 @@
+
 def foo():
     print 'Foo'
-    return 6
+    foo.cnt += 1
+    for i in xrange(0,10000000*foo.cnt):
+        pass
+    return foo.cnt
+
+foo.cnt = 1
 
 def foo2(x,y):
     print 'Foo2'
